@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	//Ausgabe der Dockerports
+	//todo get this information from boot2docker or shell environment
 	endpoint := "tcp://192.168.59.103:2376"
 	client, err := docker.NewTLSClient(endpoint,
 		"/Users/joerg/.boot2docker/certs/boot2docker-vm/cert.pem",
@@ -33,4 +33,8 @@ func main() {
 			}
 		}
 	}
+
+	//next listen for events regarding new ports
+
+	//then open proxy
 }
