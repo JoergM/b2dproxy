@@ -25,7 +25,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	fmt.Println("Aktuell freigegebene Ports:")
+	fmt.Println("Current public ports:")
 	for _, container := range containers {
 		for _, port := range container.Ports {
 			if port.PublicPort != 0 {
