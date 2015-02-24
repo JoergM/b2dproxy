@@ -19,22 +19,40 @@ func main() {
 		os.Exit(2)
 	}
 
+	//initial read of ports
+	updateports(client)
+
+	//now listen for events to update ports
+	events := make(chan *docker.APIEvents)
+	err = client.AddEventListener(events)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
+
+	for {
+		<-events //it does't matter what kind of update, just refresh the ports
+		updateports(client)
+	}
+
+}
+
+func updateports(client *docker.Client) {
 	containers, err := client.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(2)
 	}
 
-	fmt.Println("Current public ports:")
+	fmt.Print("Forwarded ports:")
 	for _, container := range containers {
 		for _, port := range container.Ports {
 			if port.PublicPort != 0 {
-				fmt.Printf("%s : %d\n", container.Names[0], port.PublicPort)
+				//todo check if ports are changed
+				fmt.Printf("%d ", port.PublicPort)
+				//todo start a proxy
 			}
 		}
 	}
-
-	//next listen for events regarding new ports
-
-	//then open proxy
+	fmt.Print("\n")
 }
