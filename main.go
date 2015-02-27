@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/fsouza/go-dockerclient"
 )
+
+var oldports []int
 
 func main() {
 	//todo get this information from boot2docker or shell environment
@@ -44,15 +47,45 @@ func updateports(client *docker.Client) {
 		os.Exit(2)
 	}
 
-	fmt.Print("Forwarded ports:")
+	currentports := findcurrentports(containers)
+	removeoldports(currentports)
+	addnewports(currentports)
+	oldports = currentports
+}
+
+func findcurrentports(containers []docker.APIContainers) []int {
+
+	currentports := make([]int, 0)
+
 	for _, container := range containers {
 		for _, port := range container.Ports {
 			if port.PublicPort != 0 {
-				//todo check if ports are changed
-				fmt.Printf("%d ", port.PublicPort)
-				//todo start a proxy
+				currentports = append(currentports, int(port.PublicPort))
 			}
 		}
 	}
-	fmt.Print("\n")
+
+	sort.Ints(currentports)
+
+	return currentports
+}
+
+func removeoldports(currentports []int) {
+	for _, port := range oldports {
+		i := sort.SearchInts(currentports, port)
+		if i == len(currentports) || currentports[i] != port {
+			fmt.Printf("Removing Port: %d\n", port)
+			//todo remove proxy
+		}
+	}
+}
+
+func addnewports(currentports []int) {
+	for _, port := range currentports {
+		i := sort.SearchInts(oldports, port)
+		if i == len(oldports) || oldports[i] != port {
+			fmt.Printf("Adding Port: %d\n", port)
+			//todo start a proxy
+		}
+	}
 }
