@@ -8,23 +8,13 @@ import (
 )
 
 func main() {
-	//listen to a port and print incoming data
-	listenonport(8080)
-
-	//dial a remote port and send data
-
-	//copy data from incoming to outgoing
-
-	//handling responses
-
-	//handling multiple connections (test with ab)
-
+	proxyport("192.168.59.103", 8080)
 	//create API for use in main
 
 	//udp connections?
 }
 
-func listenonport(port int64) {
+func proxyport(host string, port int64) {
 	portstr := fmt.Sprintf(":%d", port)
 	ln, err := net.Listen("tcp", portstr)
 	if err != nil {
@@ -38,10 +28,21 @@ func listenonport(port int64) {
 			panic(err)
 		}
 
-		go func(c net.Conn) {
-			log.Println(c.RemoteAddr())
-			io.Copy(c, c)
-			c.Close()
-		}(conn)
+		go proxyconnection(host, conn)
 	}
+}
+
+func proxyconnection(host string, conn net.Conn) {
+
+	log.Printf("Proxy %v to %s\n", conn.RemoteAddr(), host)
+	io.Copy(conn, conn)
+
+	conn.Close()
+	//dial a remote port and send data
+
+	//copy data from incoming to outgoing
+
+	//handling responses
+
+	//handling multiple connections (test with ab)
 }

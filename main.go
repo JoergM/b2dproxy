@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"sort"
 
@@ -9,10 +10,18 @@ import (
 )
 
 var oldports []int
+var b2dhost string
 
 func main() {
 	//todo get this information from boot2docker or shell environment
 	endpoint := "tcp://192.168.59.103:2376"
+	parsed, err := url.ParseRequestURI(endpoint)
+	if err != nil {
+		panic(err)
+	}
+
+	b2dhost = parsed.Host
+
 	client, err := docker.NewTLSClient(endpoint,
 		"/Users/joerg/.boot2docker/certs/boot2docker-vm/cert.pem",
 		"/Users/joerg/.boot2docker/certs/boot2docker-vm/key.pem",
