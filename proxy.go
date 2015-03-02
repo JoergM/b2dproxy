@@ -16,6 +16,7 @@ func main() {
 
 func proxyport(host string, port int64) {
 	portstr := fmt.Sprintf(":%d", port)
+
 	ln, err := net.Listen("tcp", portstr)
 	if err != nil {
 		panic(err)
@@ -28,17 +29,25 @@ func proxyport(host string, port int64) {
 			panic(err)
 		}
 
-		go proxyconnection(host, conn)
+		go proxyconnection(host, port, conn)
 	}
 }
 
-func proxyconnection(host string, conn net.Conn) {
+func proxyconnection(host string, port int64, upstream net.Conn) {
 
-	log.Printf("Proxy %v to %s\n", conn.RemoteAddr(), host)
-	io.Copy(conn, conn)
+	log.Printf("Proxy %v to %s\n", upstream.RemoteAddr(), host)
 
-	conn.Close()
-	//dial a remote port and send data
+	downstream, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println(downstream)
+
+	io.Copy(downstream, upstream)
+
+	upstream.Close()
+	downstream.Close()
 
 	//copy data from incoming to outgoing
 
