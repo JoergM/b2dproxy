@@ -35,21 +35,21 @@ func proxyport(host string, port int64) {
 
 func proxyconnection(host string, port int64, upstream net.Conn) {
 
+	defer upstream.Close()
+
 	log.Printf("Proxy %v to %s\n", upstream.RemoteAddr(), host)
 
 	downstream, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		panic(err)
 	}
+	defer downstream.Close()
 
 	log.Println(downstream)
 
+	//in parallel copy responses back
+	go io.Copy(upstream, downstream)
 	io.Copy(downstream, upstream)
-
-	upstream.Close()
-	downstream.Close()
-
-	//copy data from incoming to outgoing
 
 	//handling responses
 
