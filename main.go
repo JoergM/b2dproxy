@@ -1,16 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"net/url"
-	"sort"
 	"strings"
 
 	"github.com/fsouza/go-dockerclient"
 )
 
-//todo change array logic to set (map with bool values)
-var oldports []int
+var proxiedPorts map[int]*SinglePortProxy
 var b2dhost string
 
 func main() {
@@ -37,6 +34,7 @@ func main() {
 	}
 
 	//initial read of ports
+	proxiedPorts = make(map[int]*SinglePortProxy)
 	updateports(client)
 
 	//now listen for events to update ports
@@ -59,45 +57,39 @@ func updateports(client *docker.Client) {
 		panic(err)
 	}
 
-	currentports := findcurrentports(containers)
-	removeoldports(currentports)
-	addnewports(currentports)
-	oldports = currentports
+	currentports := findCurrentPorts(containers)
+	removeOldPorts(currentports)
+	addNewPorts(currentports)
 }
 
-func findcurrentports(containers []docker.APIContainers) []int {
+func findCurrentPorts(containers []docker.APIContainers) map[int]bool {
 
-	currentports := make([]int, 0)
+	currentports := make(map[int]bool)
 
 	for _, container := range containers {
 		for _, port := range container.Ports {
 			if port.PublicPort != 0 {
-				currentports = append(currentports, int(port.PublicPort))
+				currentports[int(port.PublicPort)] = true
 			}
 		}
 	}
 
-	sort.Ints(currentports)
-
 	return currentports
 }
 
-func removeoldports(currentports []int) {
-	for _, port := range oldports {
-		i := sort.SearchInts(currentports, port)
-		if i == len(currentports) || currentports[i] != port {
-			fmt.Printf("Removing Port: %d\n", port)
-			//todo remove proxy
+func removeOldPorts(currentports map[int]bool) {
+	for port, proxy := range proxiedPorts {
+		if !currentports[port] {
+			proxy.stopListen()
+			delete(proxiedPorts, port)
 		}
 	}
 }
 
-func addnewports(currentports []int) {
-	for _, port := range currentports {
-		i := sort.SearchInts(oldports, port)
-		if i == len(oldports) || oldports[i] != port {
-			fmt.Printf("Adding Port: %d\n", port)
-			proxyPort(b2dhost, port)
+func addNewPorts(currentports map[int]bool) {
+	for port, _ := range currentports {
+		if proxiedPorts[port] == nil {
+			proxiedPorts[port] = NewSinglePortProxy(b2dhost, port)
 		}
 	}
 }

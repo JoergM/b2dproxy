@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-func proxyPort(host string, port int) SinglePortProxy {
+func NewSinglePortProxy(host string, port int) *SinglePortProxy {
 	portstr := fmt.Sprintf(":%d", port)
 	log.Printf("New Proxy on Port %s for host %s", portstr, host)
 
@@ -24,20 +24,31 @@ func proxyPort(host string, port int) SinglePortProxy {
 
 	go spp.listenForConnections()
 
-	return spp
+	return &spp
 }
 
 type SinglePortProxy struct {
 	host     string
 	port     int
 	listener net.Listener
+	stopped  bool
 }
 
-func (proxy SinglePortProxy) listenForConnections() {
+func (proxy *SinglePortProxy) listenForConnections() {
 	for {
+		defer func() {
+			if r := recover(); r != nil {
+				//it's ok, Accept probably stopped because port is closed
+			}
+		}()
+
 		conn, err := proxy.listener.Accept()
 		if err != nil {
-			panic(err)
+			if proxy.stopped {
+				break
+			} else {
+				panic(err)
+			}
 		}
 
 		pc := proxyConnection{
@@ -51,6 +62,8 @@ func (proxy SinglePortProxy) listenForConnections() {
 }
 
 func (proxy SinglePortProxy) stopListen() {
+	log.Printf("Stop listening to port %v\n", proxy.port)
+	proxy.stopped = true
 	proxy.listener.Close()
 }
 
