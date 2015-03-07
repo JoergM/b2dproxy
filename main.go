@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"sort"
 	"strings"
 
 	"github.com/fsouza/go-dockerclient"
 )
 
+//todo change array logic to set (map with bool values)
 var oldports []int
 var b2dhost string
 
@@ -33,8 +33,7 @@ func main() {
 		"/Users/joerg/.boot2docker/certs/boot2docker-vm/key.pem",
 		"/Users/joerg/.boot2docker/certs/boot2docker-vm/ca.pem")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(2)
+		panic(err)
 	}
 
 	//initial read of ports
@@ -44,8 +43,7 @@ func main() {
 	events := make(chan *docker.APIEvents)
 	err = client.AddEventListener(events)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(2)
+		panic(err)
 	}
 
 	for {
@@ -58,8 +56,7 @@ func main() {
 func updateports(client *docker.Client) {
 	containers, err := client.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(2)
+		panic(err)
 	}
 
 	currentports := findcurrentports(containers)
@@ -100,7 +97,7 @@ func addnewports(currentports []int) {
 		i := sort.SearchInts(oldports, port)
 		if i == len(oldports) || oldports[i] != port {
 			fmt.Printf("Adding Port: %d\n", port)
-			go proxyPort(b2dhost, port)
+			proxyPort(b2dhost, port)
 		}
 	}
 }

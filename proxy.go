@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-func proxyPort(host string, port int) {
+func proxyPort(host string, port int) SinglePortProxy {
 	portstr := fmt.Sprintf(":%d", port)
 	log.Printf("New Proxy on Port %s for host %s", portstr, host)
 
@@ -15,24 +15,43 @@ func proxyPort(host string, port int) {
 	if err != nil {
 		panic(err)
 	}
-	defer ln.Close()
 
+	spp := SinglePortProxy{
+		host:     host,
+		port:     port,
+		listener: ln,
+	}
+
+	go spp.listenForConnections()
+
+	return spp
+}
+
+type SinglePortProxy struct {
+	host     string
+	port     int
+	listener net.Listener
+}
+
+func (proxy SinglePortProxy) listenForConnections() {
 	for {
-		conn, err := ln.Accept()
+		conn, err := proxy.listener.Accept()
 		if err != nil {
 			panic(err)
 		}
 
 		pc := proxyConnection{
 			upstream:       conn,
-			downstreamHost: host,
-			downstreamPort: port,
+			downstreamHost: proxy.host,
+			downstreamPort: proxy.port,
 		}
 
 		go pc.establish()
 	}
+}
 
-	//todo return value that can be used to end proxyPort
+func (proxy SinglePortProxy) stopListen() {
+	proxy.listener.Close()
 }
 
 type proxyConnection struct {
@@ -45,8 +64,6 @@ type proxyConnection struct {
 func (pc *proxyConnection) establish() {
 
 	defer pc.upstream.Close()
-
-	log.Printf("Proxy %v to %s\n", pc.upstream.RemoteAddr(), pc.downstreamHost)
 
 	var err error
 	pc.downstream, err = net.Dial("tcp", fmt.Sprintf("%s:%d", pc.downstreamHost, pc.downstreamPort))
