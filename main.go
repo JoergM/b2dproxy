@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -20,7 +21,12 @@ func main() {
 		panic(err)
 	}
 
-	b2dhost = parsed.Host
+	colonIndex := strings.LastIndex(parsed.Host, ":")
+	if colonIndex != -1 {
+		b2dhost = parsed.Host[:colonIndex]
+	} else {
+		b2dhost = parsed.Host
+	}
 
 	client, err := docker.NewTLSClient(endpoint,
 		"/Users/joerg/.boot2docker/certs/boot2docker-vm/cert.pem",
@@ -94,7 +100,7 @@ func addnewports(currentports []int) {
 		i := sort.SearchInts(oldports, port)
 		if i == len(oldports) || oldports[i] != port {
 			fmt.Printf("Adding Port: %d\n", port)
-			//todo start a proxy
+			go proxyPort(b2dhost, port)
 		}
 	}
 }

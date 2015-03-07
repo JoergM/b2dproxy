@@ -7,15 +7,9 @@ import (
 	"net"
 )
 
-func main() {
-	proxyport("192.168.59.103", 8080)
-	//create API for use in main
-
-	//udp connections?
-}
-
-func proxyport(host string, port int64) {
+func proxyPort(host string, port int) {
 	portstr := fmt.Sprintf(":%d", port)
+	log.Printf("New Proxy on Port %s for host %s", portstr, host)
 
 	ln, err := net.Listen("tcp", portstr)
 	if err != nil {
@@ -29,29 +23,48 @@ func proxyport(host string, port int64) {
 			panic(err)
 		}
 
-		go proxyconnection(host, port, conn)
+		pc := proxyConnection{
+			upstream:       conn,
+			downstreamHost: host,
+			downstreamPort: port,
+		}
+
+		go pc.establish()
 	}
+
+	//todo return value that can be used to end proxyPort
 }
 
-func proxyconnection(host string, port int64, upstream net.Conn) {
+type proxyConnection struct {
+	upstream       net.Conn
+	downstream     net.Conn
+	downstreamHost string
+	downstreamPort int
+}
 
-	defer upstream.Close()
+func (pc *proxyConnection) establish() {
 
-	log.Printf("Proxy %v to %s\n", upstream.RemoteAddr(), host)
+	defer pc.upstream.Close()
 
-	downstream, err := net.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
+	log.Printf("Proxy %v to %s\n", pc.upstream.RemoteAddr(), pc.downstreamHost)
+
+	var err error
+	pc.downstream, err = net.Dial("tcp", fmt.Sprintf("%s:%d", pc.downstreamHost, pc.downstreamPort))
 	if err != nil {
 		panic(err)
 	}
-	defer downstream.Close()
-
-	log.Println(downstream)
+	defer pc.downstream.Close()
 
 	//in parallel copy responses back
-	go io.Copy(upstream, downstream)
-	io.Copy(downstream, upstream)
+	done := make(chan bool)
+	go copyContent(pc.downstream, pc.upstream, done)
+	go copyContent(pc.upstream, pc.downstream, done)
 
-	//handling responses
+	//wait for one channel to finish
+	<-done
+}
 
-	//handling multiple connections (test with ab)
+func copyContent(in net.Conn, out net.Conn, done chan bool) {
+	io.Copy(out, in)
+	done <- true
 }
