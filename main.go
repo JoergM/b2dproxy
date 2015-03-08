@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/url"
 	"os"
@@ -46,6 +47,7 @@ func main() {
 
 	//initial read of ports
 	proxiedPorts = make(map[int]*SinglePortProxy)
+	log.Printf("Started b2dProxy. Now watching Docker for open ports ...\n")
 	updateports(client)
 
 	//now listen for events to update ports
