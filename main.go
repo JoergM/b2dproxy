@@ -1,8 +1,8 @@
 package main
 
 import (
+	"net"
 	"net/url"
-	"strings"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -18,11 +18,9 @@ func main() {
 		panic(err)
 	}
 
-	colonIndex := strings.LastIndex(parsed.Host, ":")
-	if colonIndex != -1 {
-		b2dhost = parsed.Host[:colonIndex]
-	} else {
-		b2dhost = parsed.Host
+	b2dhost, _, err = net.SplitHostPort(parsed.Host)
+	if err != nil {
+		panic(err)
 	}
 
 	client, err := docker.NewTLSClient(endpoint,
