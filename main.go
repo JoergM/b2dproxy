@@ -1,8 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"net/url"
+	"os"
+	"os/user"
+	"path"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -11,8 +15,11 @@ var proxiedPorts map[int]*SinglePortProxy
 var b2dhost string
 
 func main() {
-	//todo get this information from boot2docker or shell environment
-	endpoint := "tcp://192.168.59.103:2376"
+	endpoint := os.Getenv("DOCKER_HOST")
+	if endpoint == "" {
+		fmt.Println("Could not find DOCKER_HOST. You have to set the environment.")
+		os.Exit(2)
+	}
 	parsed, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		panic(err)
@@ -23,10 +30,16 @@ func main() {
 		panic(err)
 	}
 
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
+	//todo handle non tls connections (ENV DOCKER_TLS_VERIFY)
 	client, err := docker.NewTLSClient(endpoint,
-		"/Users/joerg/.boot2docker/certs/boot2docker-vm/cert.pem",
-		"/Users/joerg/.boot2docker/certs/boot2docker-vm/key.pem",
-		"/Users/joerg/.boot2docker/certs/boot2docker-vm/ca.pem")
+		path.Join(user.HomeDir, ".boot2docker/certs/boot2docker-vm/cert.pem"),
+		path.Join(user.HomeDir, ".boot2docker/certs/boot2docker-vm/key.pem"),
+		path.Join(user.HomeDir, ".boot2docker/certs/boot2docker-vm/ca.pem"))
 	if err != nil {
 		panic(err)
 	}
