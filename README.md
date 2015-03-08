@@ -47,4 +47,9 @@ Hello World!
 
 ## Status
 
-This tool is still under heavy development. You should not use it in any critical environment. There will probably be bugs. If you find any you are welcome to file an issue or even better a pull request.
+This tool is still under development. You should not use it in any critical environment. There will probably be bugs. If you find any you are welcome to file an issue or even better a pull request.
+
+### Known Open issues
+
+- UDP connections
+- NON TLS Connection on localhost

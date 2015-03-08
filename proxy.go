@@ -11,6 +11,7 @@ func NewSinglePortProxy(host string, port int) *SinglePortProxy {
 	portstr := fmt.Sprintf(":%d", port)
 	log.Printf("New Proxy on Port %s for host %s", portstr, host)
 
+	//todo handle udp
 	ln, err := net.Listen("tcp", portstr)
 	if err != nil {
 		panic(err)
