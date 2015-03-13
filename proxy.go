@@ -7,15 +7,17 @@ import (
 	"net"
 )
 
-func NewSinglePortProxy(host string, port int) *SinglePortProxy {
+func NewSinglePortProxy(host string, port int) (*SinglePortProxy, error) {
 	portstr := fmt.Sprintf(":%d", port)
-	log.Printf("New Proxy on Port %s for host %s", portstr, host)
 
 	//todo handle udp
 	ln, err := net.Listen("tcp", portstr)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return nil, err
 	}
+
+	log.Printf("New Proxy on Port %s for host %s", portstr, host)
 
 	spp := SinglePortProxy{
 		host:     host,
@@ -25,7 +27,7 @@ func NewSinglePortProxy(host string, port int) *SinglePortProxy {
 
 	go spp.listenForConnections()
 
-	return &spp
+	return &spp, nil
 }
 
 type SinglePortProxy struct {

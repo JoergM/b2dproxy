@@ -102,7 +102,7 @@ func removeOldPorts(currentports map[int]bool) {
 func addNewPorts(currentports map[int]bool) {
 	for port, _ := range currentports {
 		if proxiedPorts[port] == nil {
-			proxiedPorts[port] = NewSinglePortProxy(b2dhost, port)
+			proxiedPorts[port], _ = NewSinglePortProxy(b2dhost, port)
 		}
 	}
 }
