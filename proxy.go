@@ -84,7 +84,9 @@ func (pc *proxyConnection) establish() {
 	var err error
 	pc.downstream, err = net.Dial("tcp", fmt.Sprintf("%s:%d", pc.downstreamHost, pc.downstreamPort))
 	if err != nil {
-		panic(err)
+		//TODO if it is connection refused pass this on to the client
+		log.Println(err)
+		return
 	}
 	defer pc.downstream.Close()
 
