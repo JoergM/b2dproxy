@@ -75,14 +75,14 @@ func updateports(client *docker.Client) {
 	addNewPorts(currentports)
 }
 
-func findCurrentPorts(containers []docker.APIContainers) map[int]bool {
+func findCurrentPorts(containers []docker.APIContainers) map[int]string {
 
-	currentports := make(map[int]bool)
+	currentports := make(map[int]string)
 
 	for _, container := range containers {
 		for _, port := range container.Ports {
 			if port.PublicPort != 0 {
-				currentports[int(port.PublicPort)] = true
+				currentports[int(port.PublicPort)] = port.Type
 			}
 		}
 	}
@@ -90,19 +90,19 @@ func findCurrentPorts(containers []docker.APIContainers) map[int]bool {
 	return currentports
 }
 
-func removeOldPorts(currentports map[int]bool) {
+func removeOldPorts(currentports map[int]string) {
 	for port, proxy := range proxiedPorts {
-		if !currentports[port] {
+		if currentports[port] == "" {
 			proxy.stopListen()
 			delete(proxiedPorts, port)
 		}
 	}
 }
 
-func addNewPorts(currentports map[int]bool) {
-	for port, _ := range currentports {
+func addNewPorts(currentports map[int]string) {
+	for port, ptype := range currentports {
 		if proxiedPorts[port] == nil {
-			newPort, err := NewSinglePortProxy(b2dhost, port)
+			newPort, err := NewSinglePortProxy(b2dhost, port, ptype)
 			if err == nil {
 				proxiedPorts[port] = newPort
 			}

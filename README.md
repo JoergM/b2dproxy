@@ -14,10 +14,9 @@ Using standard go build process:
 
 ```
 $> go get github.com/joergm/b2dproxy
-$> go install github.com/joergm/b2dproxy
 ``` 
 
-The proxy will now be installed at __$GOPATH/bin__.
+The binary will now be installed at __$GOPATH/bin__.
 
 ## Usage
 
@@ -53,3 +52,4 @@ This tool is still under development. You should not use it in any critical envi
 
 - UDP connections
 - NON TLS Connection on localhost
+- Passing on connection refused to client.
