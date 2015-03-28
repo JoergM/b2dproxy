@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"os/user"
 	"path"
 
 	"github.com/fsouza/go-dockerclient"
@@ -21,6 +20,12 @@ func main() {
 		fmt.Println("Could not find DOCKER_HOST. You have to set the environment.")
 		os.Exit(2)
 	}
+	certpath := os.Getenv("DOCKER_CERT_PATH")
+	if certpath == "" {
+		fmt.Println("Could not find DOCKER_CERT_PATH. You have to set the environment.")
+		os.Exit(2)
+	}
+
 	parsed, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		panic(err)
@@ -31,16 +36,11 @@ func main() {
 		panic(err)
 	}
 
-	user, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-
 	//todo handle non tls connections (ENV DOCKER_TLS_VERIFY)
 	client, err := docker.NewTLSClient(endpoint,
-		path.Join(user.HomeDir, ".boot2docker/certs/boot2docker-vm/cert.pem"),
-		path.Join(user.HomeDir, ".boot2docker/certs/boot2docker-vm/key.pem"),
-		path.Join(user.HomeDir, ".boot2docker/certs/boot2docker-vm/ca.pem"))
+		path.Join(certpath, "cert.pem"),
+		path.Join(certpath, "key.pem"),
+		path.Join(certpath, "ca.pem"))
 	if err != nil {
 		panic(err)
 	}

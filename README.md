@@ -34,9 +34,17 @@ $> b2dproxy
 
 This will start watching Docker and open a Proxy on your _localhost_ for every public port. Proxys shut down automatically when closed in docker.
 
+If you want to use low ports (<1024) you have to start b2dproxy with root privileges:
+
+```
+$> sudo -E b2dproxy
+```
+
+The -E option keeps the environment variables.
+
 ### Example
 
-Open a webserver using the docker training image, then test it via curl. 
+Once you started b2dproxy try to open a webserver using the docker training image, then test it via curl. 
 
 ```
 $> docker run -d -p 5000:5000 training/webapp
