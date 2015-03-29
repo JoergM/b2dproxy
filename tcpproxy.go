@@ -7,12 +7,8 @@ import (
 	"net"
 )
 
-func NewSinglePortProxy(host string, port int, ptype string) (*SinglePortProxy, error) {
+func NewSinglePortProxy(host string, port int) (*SinglePortProxy, error) {
 	portstr := fmt.Sprintf(":%d", port)
-
-	if ptype == "udp" {
-		startUDPForwarder(host, portstr)
-	}
 
 	ln, err := net.Listen("tcp", portstr)
 	if err != nil {
@@ -67,7 +63,7 @@ func (proxy *SinglePortProxy) listenForConnections() {
 	}
 }
 
-func (proxy SinglePortProxy) stopListen() {
+func (proxy SinglePortProxy) Stop() {
 	log.Printf("Stop listening to port %v\n", proxy.port)
 	proxy.stopped = true
 	proxy.listener.Close()
@@ -105,16 +101,4 @@ func (pc *proxyConnection) establish() {
 func copyContent(in net.Conn, out net.Conn, done chan bool) {
 	io.Copy(out, in)
 	done <- true
-}
-
-func startUDPForwarder(host, portstr string) {
-
-	log.Printf("New UDP Forwarder on Port %s, for host %s", portstr, host)
-	//TODO implement
-	//	udpAddr, _ := net.ResolveUDPAddr("udp", portstr)
-	//	ln, err = net.ListenUDP("udp", udpAddr)
-	//	if err != nil {
-	//		log.Println(err)
-	//		return nil, err
-	//	}
 }

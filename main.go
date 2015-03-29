@@ -11,7 +11,11 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-var proxiedPorts map[int]*SinglePortProxy
+type Stoppable interface {
+	Stop()
+}
+
+var proxiedPorts map[int]Stoppable
 var b2dhost string
 
 func main() {
@@ -46,7 +50,7 @@ func main() {
 	}
 
 	//initial read of ports
-	proxiedPorts = make(map[int]*SinglePortProxy)
+	proxiedPorts = make(map[int]Stoppable)
 	log.Printf("Started b2dProxy. Now watching Docker for open ports ...\n")
 	updateports(client)
 
@@ -93,7 +97,7 @@ func findCurrentPorts(containers []docker.APIContainers) map[int]string {
 func removeOldPorts(currentports map[int]string) {
 	for port, proxy := range proxiedPorts {
 		if currentports[port] == "" {
-			proxy.stopListen()
+			proxy.Stop()
 			delete(proxiedPorts, port)
 		}
 	}
@@ -102,9 +106,18 @@ func removeOldPorts(currentports map[int]string) {
 func addNewPorts(currentports map[int]string) {
 	for port, ptype := range currentports {
 		if proxiedPorts[port] == nil {
-			newPort, err := NewSinglePortProxy(b2dhost, port, ptype)
-			if err == nil {
-				proxiedPorts[port] = newPort
+			if ptype == "udp" {
+				//TODO deactivated until fully implemented
+				//forwarder := NewUDPForwarder(b2dhost, port)
+				//err := forwarder.start()
+				//	if err == nil {
+				//proxiedPorts[port] = forwarder
+				//		}
+			} else {
+				newPort, err := NewSinglePortProxy(b2dhost, port)
+				if err == nil {
+					proxiedPorts[port] = newPort
+				}
 			}
 		}
 	}

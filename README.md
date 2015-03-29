@@ -6,7 +6,7 @@ A simple proxy that watches the Docker host in the boot2docker virtual machine a
 
 It's just inconvinient when using boot2docker, that you can't refer to localhost but instead have to use the internal network address of the boot2docker VM.
 
-This little tool makes using boot2docker just a little more convinient.
+This tool makes using boot2docker just a little more convinient.
 
 ## Installation
 
