@@ -107,12 +107,11 @@ func addNewPorts(currentports map[int]string) {
 	for port, ptype := range currentports {
 		if proxiedPorts[port] == nil {
 			if ptype == "udp" {
-				//TODO deactivated until fully implemented
-				//forwarder := NewUDPForwarder(b2dhost, port)
-				//err := forwarder.start()
-				//	if err == nil {
-				//proxiedPorts[port] = forwarder
-				//		}
+				forwarder := NewUDPForwarder(b2dhost, port)
+				err := forwarder.start()
+				if err == nil {
+					proxiedPorts[port] = forwarder
+				}
 			} else {
 				newPort, err := NewSinglePortProxy(b2dhost, port)
 				if err == nil {
