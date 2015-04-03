@@ -58,6 +58,6 @@ This tool is still under development. You should not use it in any critical envi
 
 ### Known Open issues
 
-- UDP connections
 - NON TLS Connection on localhost
 - Passing on connection refused to client.
+- UDP does not forward the origin IP address

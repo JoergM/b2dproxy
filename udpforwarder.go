@@ -86,5 +86,15 @@ func (uf *UDPForwarder) readPackage() {
 }
 
 func (uf *UDPForwarder) forwardPackage(pkg []byte) {
-	//fmt.Println(string(pkg))
+	conn, err := net.DialUDP("udp", nil, uf.downstream)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer conn.Close()
+
+	_, err = conn.Write(pkg)
+	if err != nil {
+		log.Println(err)
+	}
 }
